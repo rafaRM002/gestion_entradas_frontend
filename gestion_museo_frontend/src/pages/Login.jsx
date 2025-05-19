@@ -1,0 +1,91 @@
+"use client"
+
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { API_URL } from "../utilities/apirest"
+import axios from "axios"
+
+function Login() {
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [errorMessage, setErrorMessage] = useState(null)
+  const navigate = useNavigate()
+
+  function realizarSolicitud(event) {
+    event.preventDefault()
+    const url = API_URL + "login"
+    axios
+      .post(url, { username: username, password: password })
+      .then((response) => {
+        if (response.status == 200) {
+          const token = response.data.token.split("|")[1]
+          localStorage.setItem("authToken", token)
+          setErrorMessage(null)
+          navigate("/home")
+        }
+      })
+      .catch((error) => {
+        if (error.response) {
+          setErrorMessage("Credenciales incorrectas. Inténtalo de nuevo.")
+        } else {
+          setErrorMessage("Error de conexión. Por favor, intenta más tarde.")
+        }
+      })
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md p-10 bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="flex justify-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">MUSEO</h1>
+        </div>
+
+        <h2 className="text-center text-2xl font-medium text-gray-800 mb-6">Iniciar sesión</h2>
+
+        {errorMessage && (
+          <div className="text-sm text-center text-red-700 bg-red-50 rounded py-2 mb-4">{errorMessage}</div>
+        )}
+
+        <form onSubmit={realizarSolicitud} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">username</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
+              placeholder="usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <input
+              type="password"
+              className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2 bg-gray-900 text-white font-medium rounded-md hover:bg-gray-800 transition-colors"
+          >
+            Iniciar Sesión
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-gray-600 mt-6">
+          ¿No tienes cuenta?{" "}
+          <span className="underline cursor-pointer hover:text-gray-800">
+            <a href="/registro">Regístrate</a>
+          </span>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default Login
