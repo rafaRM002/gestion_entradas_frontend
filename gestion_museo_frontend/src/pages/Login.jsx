@@ -18,10 +18,10 @@ function Login() {
       .post(url, { username: username, password: password })
       .then((response) => {
         if (response.status == 200) {
-          const token = response.data.token.split("|")[1]
+          const token = response.data.token
           localStorage.setItem("authToken", token)
           setErrorMessage(null)
-          navigate("/home")
+          navigate("/establecimiento")
         }
       })
       .catch((error) => {

@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound"
 import Tickets from "./pages/Tickets"
 import Perfil from "./pages/Perfil"
 import Registro from "./pages/Register"
+import Establecimiento from "./pages/Establecimiento"
 import { API_URL } from "./utilities/apirest"
 import axios from "axios"
 
@@ -32,6 +33,7 @@ function AppContent() {
   const isAuthenticated = localStorage.getItem("authToken")
   const [cart, setCart] = useState([])
   const [admin, setAdmin] = useState()
+  
 
   useEffect(() => {
     const storedCart = localStorage.getItem("cart")
@@ -67,11 +69,16 @@ function AppContent() {
 
   return (
     <>
-      {location.pathname !== "/" && location.pathname !== "/registro" && <Navbar admin={admin} />}
+      {location.pathname !== "/" && location.pathname !== "/registro" && location.pathname !== "/establecimiento" && <Navbar admin={admin} />}
 
       <Routes>
-        <Route path="/" element={!isAuthenticated ? <Login /> : <Navigate to="/home" replace />} />
-        <Route path="/registro" element={!isAuthenticated ? <Registro /> : <Navigate to="/home" replace />} />
+        <Route path="/" element={!isAuthenticated ? <Login /> : <Navigate to="/establecimiento" replace />} />
+        <Route path="/registro" element={!isAuthenticated ? <Registro /> : <Navigate to="/establecimiento" replace />} />
+
+
+
+        <Route path="/establecimiento" element={isAuthenticated ? <Establecimiento /> : <Navigate to="/" replace />} />
+
 
         <Route path="/home" element={isAuthenticated ? <Home /> : <Navigate to="/" replace />} />
         <Route path="/notFound" element={isAuthenticated ? <NotFound /> : <Navigate to="/" replace />} />
@@ -96,7 +103,7 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {location.pathname !== "/" && location.pathname !== "/registro" && <Footer />}
+      {location.pathname !== "/" && location.pathname !== "/registro" && location.pathname !== "/establecimiento" && <Footer />}
     </>
   )
 }
