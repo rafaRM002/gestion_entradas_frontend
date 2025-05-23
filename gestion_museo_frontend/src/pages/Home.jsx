@@ -2,7 +2,6 @@
 
 import { useNavigate } from "react-router-dom"
 import { CheckCircleIcon } from "@heroicons/react/24/solid"
-import MarbellaMap from "../components/MarbellaMap"
 export default function Home() {
   const navigate = useNavigate()
 
@@ -11,11 +10,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-gray-900 text-white">
         <div className="absolute inset-0 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1566159266269-2d7b3c7c9e44?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-            alt="Museo"
-            className="w-full h-full object-cover opacity-40"
-          />
+         
         </div>
         <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">Museo Nacional de Arte</h1>
