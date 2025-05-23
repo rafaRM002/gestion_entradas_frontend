@@ -184,21 +184,6 @@ function EstablecimientoCard({ establecimiento }) {
             <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">
               {establecimiento.nombre}
             </h3>
-            <p className="text-sm text-gray-500">
-              ID: #{establecimiento.id.toString().padStart(3, "0")}
-            </p>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-100 pt-4 mb-4">
-          <div className="flex items-center space-x-3">
-            <User className="h-5 w-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Responsable</p>
-              <p className="font-semibold text-gray-900">
-                {establecimiento.comercio.usuario.username}
-              </p>
-            </div>
           </div>
         </div>
 
