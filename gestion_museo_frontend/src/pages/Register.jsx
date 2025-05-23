@@ -124,7 +124,7 @@ export default function Registro() {
             <input
               type="password"
               className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
-              placeholder="********"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -196,7 +196,7 @@ export default function Registro() {
             <input
               type="password"
               className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
-              placeholder="********"
+              placeholder="••••••••"
               value={password_confirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
               required
