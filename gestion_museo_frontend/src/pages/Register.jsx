@@ -43,12 +43,8 @@ export default function Registro() {
     const url = API_URL + "api/register";
     axios
       .post(url, {
-        Nombre: nombre,
-        Apellidos: apellidos,
-        Fecha_nacimiento: fecha_nacimiento,
-        Email: email,
-        Password: password,
-        Password_confirmation: password_confirmation,
+        username: nombre,
+        password: password,
       })
       .then((response) => {
         if (response.status === 201 || response.status === 200) {
