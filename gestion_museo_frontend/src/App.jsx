@@ -17,6 +17,7 @@ import Tickets from "./pages/Tickets"
 import Perfil from "./pages/Perfil"
 import Registro from "./pages/Register"
 import Establecimiento from "./pages/Establecimiento"
+import Dashboard from "./pages/DashBoard"
 import { API_URL } from "./utilities/apirest"
 import axios from "axios"
 
@@ -75,8 +76,7 @@ function AppContent() {
         <Route path="/" element={!isAuthenticated ? <Login /> : <Navigate to="/establecimiento" replace />} />
         <Route path="/registro" element={!isAuthenticated ? <Registro /> : <Navigate to="/establecimiento" replace />} />
 
-
-
+    
         <Route path="/establecimiento" element={isAuthenticated ? <Establecimiento /> : <Navigate to="/" replace />} />
 
 
@@ -84,6 +84,7 @@ function AppContent() {
         <Route path="/notFound" element={isAuthenticated ? <NotFound /> : <Navigate to="/" replace />} />
         <Route path="/entradas" element={isAuthenticated ? <Entradas /> : <Navigate to="/" replace />} />
         <Route path="/productos" element={isAuthenticated ? <Productos /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" replace />} />
         <Route
           path="/detalle-entrada/:id"
           element={isAuthenticated ? <DetalleEntrada cart={cart} setCart={setCart} /> : <Navigate to="/" replace />}

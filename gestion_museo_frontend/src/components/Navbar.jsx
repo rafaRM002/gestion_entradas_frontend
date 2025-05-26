@@ -18,6 +18,7 @@ export default function Example({ admin }) {
     { name: "Productos", href: "/productos" },
     { name: "Tickets", href: "/tickets" },
     { name: "Carrito", href: "/carrito" },
+    { name: "Dashboard", href: "/dashboard" },
 // Siempre incluido pero se ocultará con CSS
   ].map((item) => ({
     ...item,
