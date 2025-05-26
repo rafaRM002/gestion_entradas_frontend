@@ -1,36 +1,48 @@
 "use client"
 
-import { useNavigate } from "react-router-dom"
-import { CheckCircleIcon } from "@heroicons/react/24/solid"
-export default function Home() {
+import { useNavigate, useParams } from "react-router-dom"
+
+export default function Home({ userInfo, selectedEstablecimiento, isPreview = false }) {
   const navigate = useNavigate()
+  const { establecimientoId } = useParams()
+
+  // Si es preview, usar datos mock del establecimiento
+  const establecimientoData = isPreview
+    ? {
+        id: Number(establecimientoId),
+        nombre: "Establecimiento Demo",
+        comercio: { nombre: "Comercio Demo" },
+      }
+    : selectedEstablecimiento
+
+  const comercioNombre = establecimientoData?.comercio?.nombre || userInfo?.comercio?.nombre || "Comercio"
 
   return (
     <main>
       {/* Hero Section */}
       <section className="relative bg-gray-900 text-white">
-        <div className="absolute inset-0 overflow-hidden">
-         
-        </div>
+        <div className="absolute inset-0 overflow-hidden"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">Museo Nacional de Arte</h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">{comercioNombre}</h1>
           <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-8">
             Descubre nuestra colección permanente y exposiciones temporales
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => navigate("/entradas")}
-              className="px-8 py-3 bg-white text-gray-900 font-medium rounded-md hover:bg-gray-100 transition-colors"
-            >
-              Comprar Entradas
-            </button>
-            <button
-              onClick={() => navigate("/productos")}
-              className="px-8 py-3 bg-transparent border border-white text-white font-medium rounded-md hover:bg-white/10 transition-colors"
-            >
-              Tienda del Museo
-            </button>
-          </div>
+          {!isPreview && (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => navigate("/entradas")}
+                className="px-8 py-3 bg-white text-gray-900 font-medium rounded-md hover:bg-gray-100 transition-colors"
+              >
+                Comprar Entradas
+              </button>
+              <button
+                onClick={() => navigate("/productos")}
+                className="px-8 py-3 bg-transparent border border-white text-white font-medium rounded-md hover:bg-white/10 transition-colors"
+              >
+                Tienda del {comercioNombre}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -87,11 +99,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-semibold text-gray-900 mb-6">Visita Nuestro Museo</h2>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-6">Visita Nuestro {comercioNombre}</h2>
               <p className="text-gray-600 mb-6">
-                El Museo Nacional de Arte alberga una de las colecciones más importantes del país, con obras que abarcan
-                desde el siglo XV hasta la actualidad. Nuestras instalaciones ofrecen una experiencia única para los
-                amantes del arte y la cultura.
+                El {comercioNombre} alberga una de las colecciones más importantes del país, con obras que abarcan desde
+                el siglo XV hasta la actualidad. Nuestras instalaciones ofrecen una experiencia única para los amantes
+                del arte y la cultura.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start">
@@ -146,6 +158,19 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {isPreview && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="inline-flex items-center px-6 py-3 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-lg"
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver al Panel de Administración
+          </button>
+        </div>
+      )}
     </main>
   )
 }

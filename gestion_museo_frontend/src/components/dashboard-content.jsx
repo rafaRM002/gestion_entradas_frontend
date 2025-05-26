@@ -15,6 +15,9 @@ export function DashboardContent({
   selectedEstablecimiento,
   setSelectedComercio,
   setSelectedEstablecimiento,
+  onPreviewEstablecimiento,
+  comercios = [],
+  onComercioSelect,
 }) {
   const renderSection = () => {
     switch (activeSection) {
@@ -26,6 +29,8 @@ export function DashboardContent({
             currentUser={currentUser}
             selectedComercio={selectedComercio}
             setSelectedComercio={setSelectedComercio}
+            comercios={comercios}
+            onComercioSelect={onComercioSelect}
           />
         )
       case "establecimientos":
@@ -35,6 +40,7 @@ export function DashboardContent({
             selectedComercio={selectedComercio}
             selectedEstablecimiento={selectedEstablecimiento}
             setSelectedEstablecimiento={setSelectedEstablecimiento}
+            onPreviewEstablecimiento={onPreviewEstablecimiento}
           />
         )
       case "productos":

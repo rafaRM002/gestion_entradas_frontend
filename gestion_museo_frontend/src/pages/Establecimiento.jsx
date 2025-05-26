@@ -4,17 +4,18 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Store, User, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Store, ChevronLeft, ChevronRight } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useNavigate } from "react-router-dom"
 
 const ITEMS_PER_PAGE = 6
 
-export default function Establecimientos() {
+export default function Establecimientos({ setSelectedEstablecimiento }) {
   const [establecimientos, setEstablecimientos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const navigate = useNavigate()
 
   const totalPages = Math.ceil(establecimientos.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
@@ -25,25 +26,25 @@ export default function Establecimientos() {
     const fetchEstablecimientos = async () => {
       try {
         setLoading(true)
-        const token = localStorage.getItem("authToken")
-
-        if (!token) {
-          throw new Error("No se encontró el token de autenticación")
-        }
-
-        const response = await fetch("http://localhost:8080/api/establecimiento", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        // Simulamos datos de establecimientos
+        const mockEstablecimientos = [
+          {
+            id: 1,
+            nombre: "Establecimiento A",
+            comercio: { nombre: "Restaurante El Buen Sabor" },
           },
-        })
-
-        if (!response.ok) {
-          throw new Error(`Error al obtener datos: ${response.status}`)
-        }
-
-        const data = await response.json()
-        setEstablecimientos(data)
+          {
+            id: 2,
+            nombre: "Establecimiento B",
+            comercio: { nombre: "Cafetería Central" },
+          },
+          {
+            id: 3,
+            nombre: "Establecimiento C",
+            comercio: { nombre: "Tienda de Ropa Moderna" },
+          },
+        ]
+        setEstablecimientos(mockEstablecimientos)
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido")
@@ -73,14 +74,18 @@ export default function Establecimientos() {
     }
   }
 
+  const handleSelectEstablecimiento = (establecimiento) => {
+    setSelectedEstablecimiento(establecimiento)
+    localStorage.setItem("establecimiento", JSON.stringify(establecimiento))
+    navigate("/home")
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-slate-900 text-white">
         <div className="container mx-auto px-4 py-24 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Gestión de Establecimientos
-          </h1>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">Gestión de Establecimientos</h1>
           <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
             Selecciona el establecimiento al que deseas acceder para gestionar tus operaciones comerciales
           </p>
@@ -100,18 +105,21 @@ export default function Establecimientos() {
           <>
             {/* Section Title */}
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Establecimientos Disponibles
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Establecimientos Disponibles</h2>
               <p className="text-gray-600 text-lg">
-                Mostrando {startIndex + 1}-{Math.min(endIndex, establecimientos.length)} de {establecimientos.length} establecimientos
+                Mostrando {startIndex + 1}-{Math.min(endIndex, establecimientos.length)} de {establecimientos.length}{" "}
+                establecimientos
               </p>
             </div>
 
             {/* Grid de establecimientos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {currentEstablecimientos.map((establecimiento) => (
-                <EstablecimientoCard key={establecimiento.id} establecimiento={establecimiento} />
+                <EstablecimientoCard
+                  key={establecimiento.id}
+                  establecimiento={establecimiento}
+                  onSelect={handleSelectEstablecimiento}
+                />
               ))}
             </div>
 
@@ -162,18 +170,11 @@ export default function Establecimientos() {
   )
 }
 
-function EstablecimientoCard({ establecimiento }) {
-  const navigate = useNavigate()
-
-  const handleClick = () => {
-    localStorage.setItem("establecimiento", establecimiento.id.toString())
-    navigate("/home")
-  }
-
+function EstablecimientoCard({ establecimiento, onSelect }) {
   return (
     <Card
       className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer bg-white border-gray-200 h-full"
-      onClick={handleClick}
+      onClick={() => onSelect(establecimiento)}
     >
       <div className="p-8">
         <div className="flex items-start space-x-4 mb-6">
@@ -181,9 +182,7 @@ function EstablecimientoCard({ establecimiento }) {
             <Store className="h-8 w-8 text-blue-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">
-              {establecimiento.nombre}
-            </h3>
+            <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">{establecimiento.nombre}</h3>
           </div>
         </div>
 
@@ -191,9 +190,7 @@ function EstablecimientoCard({ establecimiento }) {
           <Badge variant="secondary" className="text-sm">
             {establecimiento.comercio.nombre}
           </Badge>
-          <div className="text-sm text-blue-600 font-medium">
-            Acceder →
-          </div>
+          <div className="text-sm text-blue-600 font-medium">Acceder →</div>
         </div>
       </div>
     </Card>
@@ -203,13 +200,11 @@ function EstablecimientoCard({ establecimiento }) {
 function EstablecimientosLoading() {
   return (
     <div className="space-y-12">
-      {/* Section Title Loading */}
       <div className="text-center">
         <Skeleton className="h-10 w-96 mx-auto mb-4" />
         <Skeleton className="h-6 w-64 mx-auto" />
       </div>
 
-      {/* Grid Loading */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <Card key={i} className="overflow-hidden h-full">
@@ -222,16 +217,6 @@ function EstablecimientosLoading() {
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-4 mb-4">
-                <div className="flex items-center space-x-3">
-                  <Skeleton className="h-5 w-5" />
-                  <div>
-                    <Skeleton className="h-4 w-20 mb-1" />
-                    <Skeleton className="h-5 w-24" />
-                  </div>
-                </div>
-              </div>
-
               <div className="flex justify-between">
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-5 w-16" />
@@ -239,14 +224,6 @@ function EstablecimientosLoading() {
             </div>
           </Card>
         ))}
-      </div>
-
-      {/* Pagination Loading */}
-      <div className="flex justify-center space-x-2">
-        <Skeleton className="h-12 w-24" />
-        <Skeleton className="h-12 w-12" />
-        <Skeleton className="h-12 w-12" />
-        <Skeleton className="h-12 w-24" />
       </div>
     </div>
   )

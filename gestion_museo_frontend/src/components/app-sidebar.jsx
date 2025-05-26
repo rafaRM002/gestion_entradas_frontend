@@ -21,15 +21,18 @@ export function AppSidebar({
   currentUser,
   activeSection,
   setActiveSection,
+  selectedComercio,
   setSelectedComercio,
   setSelectedEstablecimiento,
+  comercios = [],
+  onLogout,
 }) {
   const isSuperAdmin = currentUser.rol === "SUPERADMIN"
   const isAdmin = currentUser.rol === "ADMIN"
 
   const handleSectionChange = (section) => {
     setActiveSection(section)
-    setSelectedComercio(null)
+    // Solo limpiar establecimiento seleccionado, mantener comercio
     setSelectedEstablecimiento(null)
   }
 
@@ -78,6 +81,17 @@ export function AppSidebar({
     },
   ]
 
+  const getComercioNombre = () => {
+    if (isAdmin && currentUser.comercio) {
+      return currentUser.comercio.nombre
+    }
+    if (selectedComercio) {
+      const comercio = comercios.find((c) => c.id === selectedComercio)
+      return comercio?.nombre || "Comercio"
+    }
+    return "Sin comercio"
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
@@ -85,9 +99,12 @@ export function AppSidebar({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Building2 className="h-4 w-4" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold">Dashboard POS</h2>
             <p className="text-sm text-muted-foreground">{currentUser.rol}</p>
+            {(selectedComercio || (isAdmin && currentUser.comercio)) && (
+              <p className="text-xs text-muted-foreground truncate">{getComercioNombre()}</p>
+            )}
           </div>
         </div>
       </SidebarHeader>
@@ -126,11 +143,11 @@ export function AppSidebar({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => alert("Configuración")}>
             <Settings className="h-4 w-4 mr-2" />
             Config
           </Button>
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1" onClick={onLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Salir
           </Button>

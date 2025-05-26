@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Pencil, Trash2, Search, Building } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Building, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +22,7 @@ export function EstablecimientosSection({
   selectedComercio,
   selectedEstablecimiento,
   setSelectedEstablecimiento,
+  onPreviewEstablecimiento,
 }) {
   const [establecimientos, setEstablecimientos] = useState([
     { id: 1, nombre: "Sucursal Centro", comercio_id: 1, comercio_nombre: "Restaurante El Buen Sabor" },
@@ -156,9 +157,19 @@ export function EstablecimientosSection({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={() => setSelectedEstablecimiento(null)}>
-              Deseleccionar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setSelectedEstablecimiento(null)}>
+                Deseleccionar
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => onPreviewEstablecimiento(selectedEstablecimiento)}
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                Previsualizar
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -209,6 +220,14 @@ export function EstablecimientosSection({
                   <TableCell>{establecimiento.comercio_nombre}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPreviewEstablecimiento(establecimiento.id)}
+                        title="Previsualizar establecimiento"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleEdit(establecimiento)}>
                         <Pencil className="h-4 w-4" />
                       </Button>

@@ -1,29 +1,72 @@
+"use client"
+
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react"
-import LogoutButton from "../utilities/auth"
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ")
 }
 
-export default function Example({ admin }) {
+export default function Example({ userRole, userInfo, selectedEstablecimiento, isPreview = false }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { establecimientoId } = useParams()
 
-  // Actualizar los elementos de navegación para el museo
+  // Construir rutas según si es preview o no
+  const getNavHref = (page) => {
+    if (isPreview) {
+      const basePreviewPath = `/preview/${establecimientoId || "1"}`
+      switch (page) {
+        case "Inicio":
+          return basePreviewPath
+        case "Entradas":
+          return `${basePreviewPath}/entradas`
+        case "Productos":
+          return `${basePreviewPath}/productos`
+        case "Tickets":
+          return `${basePreviewPath}/tickets`
+        case "Carrito":
+          return `${basePreviewPath}/carrito`
+        default:
+          return basePreviewPath
+      }
+    } else {
+      switch (page) {
+        case "Inicio":
+          return "/home"
+        case "Entradas":
+          return "/entradas"
+        case "Productos":
+          return "/productos"
+        case "Tickets":
+          return "/tickets"
+        case "Carrito":
+          return "/carrito"
+        default:
+          return "/home"
+      }
+    }
+  }
+
   const navigation = [
-    { name: "Inicio", href: "/home" },
-    { name: "Entradas", href: "/entradas" },
-    { name: "Productos", href: "/productos" },
-    { name: "Tickets", href: "/tickets" },
-    { name: "Carrito", href: "/carrito" },
-    { name: "Dashboard", href: "/dashboard" },
-// Siempre incluido pero se ocultará con CSS
+    { name: "Inicio", href: getNavHref("Inicio") },
+    { name: "Entradas", href: getNavHref("Entradas") },
+    { name: "Productos", href: getNavHref("Productos") },
+    { name: "Tickets", href: getNavHref("Tickets") },
+    { name: "Carrito", href: getNavHref("Carrito") },
   ].map((item) => ({
     ...item,
     current: location.pathname === item.href,
   }))
+
+  // Obtener nombre del establecimiento/comercio
+  const comercioNombre = selectedEstablecimiento?.comercio?.nombre || userInfo?.comercio?.nombre || "COMERCIO"
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken")
+    navigate("/")
+  }
 
   return (
     <Disclosure as="nav" className="bg-white border-b border-gray-100">
@@ -37,25 +80,22 @@ export default function Example({ admin }) {
               <XMarkIcon aria-hidden="true" className="hidden size-6 group-data-open:block" />
             </DisclosureButton>
           </div>
+
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
             <div className="flex shrink-0 items-center">
-              <span className="text-xl font-semibold text-gray-800">MUSEO</span>
+              <span className="text-xl font-semibold text-gray-800">{comercioNombre}</span>
             </div>
+
             <div className="hidden sm:flex sm:items-center sm:justify-center flex-1">
               <div className="flex space-x-4">
-                {navigation.map((item, index) => (
-                  // Ocultar el elemento Admin si admin es false
+                {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={classNames(
                       item.current ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                      "rounded-md px-3 py-2 text-sm font-medium transition-opacity duration-300",
-                      // Ocultar Admin si no es admin
-                      item.name === "Admin" && !admin ? "opacity-0 invisible absolute" : "opacity-100 visible",
+                      "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     )}
-                    aria-hidden={item.name === "Admin" && !admin ? "true" : "false"}
-                    tabIndex={item.name === "Admin" && !admin ? -1 : 0}
                   >
                     {item.name}
                   </Link>
@@ -70,21 +110,28 @@ export default function Example({ admin }) {
                 <MenuButton className="relative flex rounded-full bg-gray-100 text-sm focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-hidden">
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">Open user menu</span>
-                  <img
-                    alt=""
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    className="size-8 rounded-full"
-                  />
+                  <div className="size-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-sm font-medium text-gray-700">
+                      {userInfo?.username?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  </div>
                 </MenuButton>
               </div>
               <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 ring-1 shadow-lg ring-black/5 transition focus:outline-hidden">
+                {!isPreview && (
+                  <MenuItem>
+                    <a href="/perfil" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      Mi Perfil
+                    </a>
+                  </MenuItem>
+                )}
                 <MenuItem>
-                  <a href="/perfil" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Mi Perfil
-                  </a>
-                </MenuItem>
-                <MenuItem>
-                  <LogoutButton />
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Cerrar Sesión
+                  </button>
                 </MenuItem>
               </MenuItems>
             </Menu>
@@ -95,7 +142,6 @@ export default function Example({ admin }) {
       <DisclosurePanel className="sm:hidden">
         <div className="space-y-1 px-2 pt-2 pb-3">
           {navigation.map((item) => (
-            // Ocultar el elemento Admin en el menú móvil si admin es false
             <DisclosureButton
               key={item.name}
               as="a"
@@ -103,12 +149,8 @@ export default function Example({ admin }) {
               aria-current={item.current ? "page" : undefined}
               className={classNames(
                 item.current ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                "block rounded-md px-3 py-2 text-base font-medium transition-opacity duration-300",
-                // Ocultar Admin si no es admin
-                item.name === "Admin" && !admin ? "hidden" : "block",
+                "block rounded-md px-3 py-2 text-base font-medium transition-colors",
               )}
-              aria-hidden={item.name === "Admin" && !admin ? "true" : "false"}
-              tabIndex={item.name === "Admin" && !admin ? -1 : 0}
             >
               {item.name}
             </DisclosureButton>

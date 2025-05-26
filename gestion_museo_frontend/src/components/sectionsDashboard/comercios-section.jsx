@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Pencil, Trash2, Search, Store } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Store, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,12 +17,22 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export function ComerciosSection({ currentUser, selectedComercio, setSelectedComercio }) {
-  const [comercios, setComercios] = useState([
-    { id: 1, nombre: "Restaurante El Buen Sabor", usuario_id: 1, usuario_nombre: "admin1" },
-    { id: 2, nombre: "Cafetería Central", usuario_id: 2, usuario_nombre: "admin2" },
-    { id: 3, nombre: "Tienda de Ropa Moderna", usuario_id: 1, usuario_nombre: "admin1" },
-  ])
+export function ComerciosSection({
+  currentUser,
+  selectedComercio,
+  setSelectedComercio,
+  comercios = [],
+  onComercioSelect,
+}) {
+  const [comerciosState, setComercios] = useState(
+    comercios.length > 0
+      ? comercios
+      : [
+          { id: 1, nombre: "Restaurante El Buen Sabor", usuario_id: 1, usuario_nombre: "admin1" },
+          { id: 2, nombre: "Cafetería Central", usuario_id: 2, usuario_nombre: "admin2" },
+          { id: 3, nombre: "Tienda de Ropa Moderna", usuario_id: 1, usuario_nombre: "admin1" },
+        ],
+  )
 
   const [usuarios] = useState([
     { id: 1, username: "admin1" },
@@ -38,7 +48,7 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
     usuario_id: 0,
   })
 
-  const filteredComercios = comercios.filter(
+  const filteredComercios = comerciosState.filter(
     (comercio) =>
       comercio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comercio.usuario_nombre.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -68,7 +78,7 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
 
     if (editingComercio) {
       setComercios(
-        comercios.map((c) =>
+        comerciosState.map((c) =>
           c.id === editingComercio.id
             ? { ...c, nombre: formData.nombre, usuario_id: formData.usuario_id, usuario_nombre: usuario.username }
             : c,
@@ -76,22 +86,29 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
       )
     } else {
       const newComercio = {
-        id: Math.max(...comercios.map((c) => c.id)) + 1,
+        id: Math.max(...comerciosState.map((c) => c.id)) + 1,
         nombre: formData.nombre,
         usuario_id: formData.usuario_id,
         usuario_nombre: usuario.username,
       }
-      setComercios([...comercios, newComercio])
+      setComercios([...comerciosState, newComercio])
     }
     setIsDialogOpen(false)
   }
 
   const handleDelete = (id) => {
-    setComercios(comercios.filter((c) => c.id !== id))
+    setComercios(comerciosState.filter((c) => c.id !== id))
+    if (selectedComercio === id) {
+      setSelectedComercio(null)
+    }
   }
 
   const handleSelectComercio = (comercio) => {
-    setSelectedComercio(comercio.id)
+    if (onComercioSelect) {
+      onComercioSelect(comercio.id)
+    } else {
+      setSelectedComercio(comercio.id)
+    }
   }
 
   return (
@@ -99,7 +116,11 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Comercios</h1>
-          <p className="text-muted-foreground">Administra todos los comercios del sistema</p>
+          <p className="text-muted-foreground">
+            {currentUser.rol === "SUPERADMIN"
+              ? "Selecciona un comercio para gestionar o administra todos los comercios del sistema"
+              : "Administra todos los comercios del sistema"}
+          </p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -114,20 +135,34 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
               <Store className="h-5 w-5" />
               Comercio Seleccionado
             </CardTitle>
-            <CardDescription>Comercio: {comercios.find((c) => c.id === selectedComercio)?.nombre}</CardDescription>
+            <CardDescription>Comercio: {comerciosState.find((c) => c.id === selectedComercio)?.nombre}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={() => setSelectedComercio(null)}>
-              Deseleccionar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setSelectedComercio(null)}>
+                Deseleccionar
+              </Button>
+              <Button
+                onClick={() => {
+                  // Cambiar a la sección de establecimientos después de seleccionar
+                  window.dispatchEvent(new CustomEvent("navigate-to-section", { detail: "establecimientos" }))
+                }}
+              >
+                Gestionar Establecimientos
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Comercios</CardTitle>
-          <CardDescription>Lista de todos los comercios registrados en el sistema</CardDescription>
+          <CardTitle>Comercios Disponibles</CardTitle>
+          <CardDescription>
+            {currentUser.rol === "SUPERADMIN"
+              ? "Haz clic en un comercio para seleccionarlo y gestionarlo"
+              : "Lista de todos los comercios registrados en el sistema"}
+          </CardDescription>
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
@@ -150,24 +185,53 @@ export function ComerciosSection({ currentUser, selectedComercio, setSelectedCom
             </TableHeader>
             <TableBody>
               {filteredComercios.map((comercio) => (
-                <TableRow key={comercio.id} className={selectedComercio === comercio.id ? "bg-muted" : ""}>
-                  <TableCell className="font-medium">{comercio.id}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto font-medium"
-                      onClick={() => handleSelectComercio(comercio)}
-                    >
-                      {comercio.nombre}
-                    </Button>
+                <TableRow
+                  key={comercio.id}
+                  className={`${selectedComercio === comercio.id ? "bg-muted" : ""} ${
+                    currentUser.rol === "SUPERADMIN" ? "cursor-pointer hover:bg-muted/50" : ""
+                  }`}
+                  onClick={() => currentUser.rol === "SUPERADMIN" && handleSelectComercio(comercio)}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {selectedComercio === comercio.id && <Check className="h-4 w-4 text-green-600" />}
+                      {comercio.id}
+                    </div>
                   </TableCell>
+                  <TableCell className="font-medium">{comercio.nombre}</TableCell>
                   <TableCell>{comercio.usuario_nombre}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(comercio)}>
+                      {currentUser.rol === "SUPERADMIN" && selectedComercio !== comercio.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSelectComercio(comercio)
+                          }}
+                        >
+                          Seleccionar
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(comercio)
+                        }}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(comercio.id)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(comercio.id)
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
