@@ -59,7 +59,7 @@ export default function Dashboard({ userInfo }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-gray-600" />
+                <Building2 className="h-5 w-5 text-gray-600 ml-60" />
                 <span className="font-medium text-gray-900">Comercio Seleccionado:</span>
               </div>
               <Select value={selectedComercio?.toString() || ""} onValueChange={handleComercioSelect}>
