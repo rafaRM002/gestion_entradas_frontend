@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import axios from "axios"
-import { API_URL } from "../config"
 import { useNavigate } from "react-router-dom"
+import API_URL from "../utilities/apirest"
 
 function Login() {
   const [username, setUsername] = useState("")
