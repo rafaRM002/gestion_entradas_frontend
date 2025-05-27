@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Pencil, Trash2, Search, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,65 +17,48 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { API_URL } from "../../utilities/apirest"
+import axios from "axios"
 
 export function ProductosSection({ currentUser, selectedEstablecimiento }) {
-  const [productos, setProductos] = useState([
-    {
-      id: 1,
-      nombre: "Hamburguesa Clásica",
-      descripcion: "Hamburguesa con carne, lechuga y tomate",
-      precio: 12.5,
-      stock: 50,
-      establecimiento_id: 1,
-      establecimiento_nombre: "Sucursal Centro",
-    },
-    {
-      id: 2,
-      nombre: "Pizza Margherita",
-      descripcion: "Pizza con tomate, mozzarella y albahaca",
-      precio: 15.0,
-      stock: 30,
-      establecimiento_id: 1,
-      establecimiento_nombre: "Sucursal Centro",
-    },
-    {
-      id: 3,
-      nombre: "Café Americano",
-      descripcion: "Café negro americano",
-      precio: 3.5,
-      stock: 100,
-      establecimiento_id: 3,
-      establecimiento_nombre: "Local Principal",
-    },
-    {
-      id: 4,
-      nombre: "Cappuccino",
-      descripcion: "Café con leche espumada",
-      precio: 4.5,
-      stock: 80,
-      establecimiento_id: 3,
-      establecimiento_nombre: "Local Principal",
-    },
-  ])
-
+  const [productos, setProductos] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [editingProducto, setEditingProducto] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
     precio: 0,
     stock: 0,
+    establecimiento_id: selectedEstablecimiento || 0,
   })
+
+  useEffect(() => {
+    if (selectedEstablecimiento) {
+      fetchProductos()
+    }
+  }, [selectedEstablecimiento])
+
+  const fetchProductos = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      const response = await axios.get(`${API_URL}api/productos?establecimiento_id=${selectedEstablecimiento}`, {
+        headers,
+      })
+      setProductos(response.data)
+    } catch (error) {
+      console.error("Error fetching productos:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredProductos = productos.filter((producto) => {
     const matchesSearch =
       producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-
-    if (selectedEstablecimiento) {
-      return matchesSearch && producto.establecimiento_id === selectedEstablecimiento
-    }
 
     return matchesSearch
   })
@@ -87,6 +70,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
       descripcion: producto.descripcion,
       precio: producto.precio,
       stock: producto.stock,
+      establecimiento_id: producto.establecimiento_id,
     })
     setIsDialogOpen(true)
   }
@@ -98,30 +82,42 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
       descripcion: "",
       precio: 0,
       stock: 0,
+      establecimiento_id: selectedEstablecimiento,
     })
     setIsDialogOpen(true)
   }
 
-  const handleSave = () => {
-    if (!selectedEstablecimiento) return
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
 
-    if (editingProducto) {
-      setProductos(productos.map((p) => (p.id === editingProducto.id ? { ...p, ...formData } : p)))
-    } else {
-      const establecimiento = productos.find((p) => p.establecimiento_id === selectedEstablecimiento)
-      const newProducto = {
-        id: Math.max(...productos.map((p) => p.id)) + 1,
-        ...formData,
-        establecimiento_id: selectedEstablecimiento,
-        establecimiento_nombre: establecimiento?.establecimiento_nombre || "Establecimiento",
+      if (editingProducto) {
+        await axios.put(`${API_URL}api/productos/${editingProducto.id}`, formData, { headers })
+      } else {
+        await axios.post(`${API_URL}api/productos`, formData, { headers })
       }
-      setProductos([...productos, newProducto])
+
+      fetchProductos()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving producto:", error)
     }
-    setIsDialogOpen(false)
   }
 
-  const handleDelete = (id) => {
-    setProductos(productos.filter((p) => p.id !== id))
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      await axios.delete(`${API_URL}api/productos/${id}`, { headers })
+      fetchProductos()
+    } catch (error) {
+      console.error("Error deleting producto:", error)
+    }
+  }
+
+  if (loading && selectedEstablecimiento) {
+    return <div>Cargando productos...</div>
   }
 
   return (
@@ -179,7 +175,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
                     <TableCell className="font-medium">{producto.id}</TableCell>
                     <TableCell className="font-medium">{producto.nombre}</TableCell>
                     <TableCell className="max-w-xs truncate">{producto.descripcion}</TableCell>
-                    <TableCell>€{producto.precio.toFixed(2)}</TableCell>
+                    <TableCell>€{Number(producto.precio).toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={producto.stock < 10 ? "text-red-600 font-medium" : ""}>{producto.stock}</span>
                     </TableCell>

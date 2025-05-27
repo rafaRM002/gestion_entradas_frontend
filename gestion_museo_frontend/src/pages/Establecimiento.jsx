@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Store, ChevronLeft, ChevronRight } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useNavigate } from "react-router-dom"
+import { API_URL } from "../utilities/apirest"
+import axios from "axios"
 
 const ITEMS_PER_PAGE = 6
 
@@ -26,29 +28,18 @@ export default function Establecimientos({ setSelectedEstablecimiento }) {
     const fetchEstablecimientos = async () => {
       try {
         setLoading(true)
-        // Simulamos datos de establecimientos
-        const mockEstablecimientos = [
-          {
-            id: 1,
-            nombre: "Establecimiento A",
-            comercio: { nombre: "Restaurante El Buen Sabor" },
-          },
-          {
-            id: 2,
-            nombre: "Establecimiento B",
-            comercio: { nombre: "Cafetería Central" },
-          },
-          {
-            id: 3,
-            nombre: "Establecimiento C",
-            comercio: { nombre: "Tienda de Ropa Moderna" },
-          },
-        ]
-        setEstablecimientos(mockEstablecimientos)
+        const token = localStorage.getItem("authToken")
+        const headers = { Authorization: `Bearer ${token}` }
+
+        const response = await axios.get(`${API_URL}api/establecimientos`, { headers })
+
+        if (response.status === 200) {
+          setEstablecimientos(response.data)
+        }
         setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido")
-        console.error("Error fetching data:", err)
+        setError(err instanceof Error ? err.message : "Error al cargar establecimientos")
+        console.error("Error fetching establecimientos:", err)
       } finally {
         setLoading(false)
       }
@@ -75,7 +66,6 @@ export default function Establecimientos({ setSelectedEstablecimiento }) {
   }
 
   const handleSelectEstablecimiento = (establecimiento) => {
-    // Usar la función que maneja localStorage
     setSelectedEstablecimiento(establecimiento)
     navigate("/home")
   }
@@ -188,7 +178,7 @@ function EstablecimientoCard({ establecimiento, onSelect }) {
 
         <div className="flex justify-between items-center">
           <Badge variant="secondary" className="text-sm">
-            {establecimiento.comercio.nombre}
+            {establecimiento.comercio?.nombre || "Comercio"}
           </Badge>
           <div className="text-sm text-blue-600 font-medium">Acceder →</div>
         </div>

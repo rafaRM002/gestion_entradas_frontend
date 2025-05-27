@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Pencil, Trash2, Search, Store, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { API_URL } from "../../utilities/apirest"
+import axios from "axios"
 
 export function ComerciosSection({
   currentUser,
@@ -24,34 +26,50 @@ export function ComerciosSection({
   comercios = [],
   onComercioSelect,
 }) {
-  const [comerciosState, setComercios] = useState(
-    comercios.length > 0
-      ? comercios
-      : [
-          { id: 1, nombre: "Restaurante El Buen Sabor", usuario_id: 1, usuario_nombre: "admin1" },
-          { id: 2, nombre: "Cafetería Central", usuario_id: 2, usuario_nombre: "admin2" },
-          { id: 3, nombre: "Tienda de Ropa Moderna", usuario_id: 1, usuario_nombre: "admin1" },
-        ],
-  )
-
-  const [usuarios] = useState([
-    { id: 1, username: "admin1" },
-    { id: 2, username: "admin2" },
-    { id: 3, username: "admin3" },
-  ])
-
+  const [comerciosState, setComercios] = useState([])
+  const [usuarios, setUsuarios] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [editingComercio, setEditingComercio] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     nombre: "",
     usuario_id: 0,
   })
 
+  useEffect(() => {
+    fetchComercios()
+    fetchUsuarios()
+  }, [])
+
+  const fetchComercios = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      const response = await axios.get(`${API_URL}api/comercios`, { headers })
+      setComercios(response.data)
+    } catch (error) {
+      console.error("Error fetching comercios:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchUsuarios = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      const response = await axios.get(`${API_URL}api/usuarios`, { headers })
+      setUsuarios(response.data.filter((user) => user.rol === "ADMIN"))
+    } catch (error) {
+      console.error("Error fetching usuarios:", error)
+    }
+  }
+
   const filteredComercios = comerciosState.filter(
     (comercio) =>
       comercio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comercio.usuario_nombre.toLowerCase().includes(searchTerm.toLowerCase()),
+      comercio.usuario?.username.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const handleEdit = (comercio) => {
@@ -72,34 +90,36 @@ export function ComerciosSection({
     setIsDialogOpen(true)
   }
 
-  const handleSave = () => {
-    const usuario = usuarios.find((u) => u.id === formData.usuario_id)
-    if (!usuario) return
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
 
-    if (editingComercio) {
-      setComercios(
-        comerciosState.map((c) =>
-          c.id === editingComercio.id
-            ? { ...c, nombre: formData.nombre, usuario_id: formData.usuario_id, usuario_nombre: usuario.username }
-            : c,
-        ),
-      )
-    } else {
-      const newComercio = {
-        id: Math.max(...comerciosState.map((c) => c.id)) + 1,
-        nombre: formData.nombre,
-        usuario_id: formData.usuario_id,
-        usuario_nombre: usuario.username,
+      if (editingComercio) {
+        await axios.put(`${API_URL}api/comercios/${editingComercio.id}`, formData, { headers })
+      } else {
+        await axios.post(`${API_URL}api/comercios`, formData, { headers })
       }
-      setComercios([...comerciosState, newComercio])
+
+      fetchComercios()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving comercio:", error)
     }
-    setIsDialogOpen(false)
   }
 
-  const handleDelete = (id) => {
-    setComercios(comerciosState.filter((c) => c.id !== id))
-    if (selectedComercio === id) {
-      setSelectedComercio(null)
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      await axios.delete(`${API_URL}api/comercios/${id}`, { headers })
+
+      if (selectedComercio === id) {
+        setSelectedComercio(null)
+      }
+      fetchComercios()
+    } catch (error) {
+      console.error("Error deleting comercio:", error)
     }
   }
 
@@ -109,6 +129,10 @@ export function ComerciosSection({
     } else {
       setSelectedComercio(comercio.id)
     }
+  }
+
+  if (loading) {
+    return <div>Cargando comercios...</div>
   }
 
   return (
@@ -144,7 +168,6 @@ export function ComerciosSection({
               </Button>
               <Button
                 onClick={() => {
-                  // Cambiar a la sección de establecimientos después de seleccionar
                   window.dispatchEvent(new CustomEvent("navigate-to-section", { detail: "establecimientos" }))
                 }}
               >
@@ -199,7 +222,7 @@ export function ComerciosSection({
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{comercio.nombre}</TableCell>
-                  <TableCell>{comercio.usuario_nombre}</TableCell>
+                  <TableCell>{comercio.usuario?.username || "Sin asignar"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {currentUser.rol === "SUPERADMIN" && selectedComercio !== comercio.id && (

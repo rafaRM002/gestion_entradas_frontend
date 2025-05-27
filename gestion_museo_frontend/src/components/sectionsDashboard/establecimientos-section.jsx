@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Pencil, Trash2, Search, Building, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { API_URL } from "../../utilities/apirest"
+import axios from "axios"
 
 export function EstablecimientosSection({
   currentUser,
@@ -24,52 +26,54 @@ export function EstablecimientosSection({
   setSelectedEstablecimiento,
   onPreviewEstablecimiento,
 }) {
-  const [establecimientos, setEstablecimientos] = useState([
-    { id: 1, nombre: "Sucursal Centro", comercio_id: 1, comercio_nombre: "Restaurante El Buen Sabor" },
-    { id: 2, nombre: "Sucursal Norte", comercio_id: 1, comercio_nombre: "Restaurante El Buen Sabor" },
-    { id: 3, nombre: "Local Principal", comercio_id: 2, comercio_nombre: "Cafetería Central" },
-    { id: 4, nombre: "Tienda Mall", comercio_id: 3, comercio_nombre: "Tienda de Ropa Moderna" },
-  ])
-
+  const [establecimientos, setEstablecimientos] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [editingEstablecimiento, setEditingEstablecimiento] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     nombre: "",
+    comercio_id: selectedComercio || currentUser.comercio_id || 0,
   })
 
-  // Filtrar establecimientos según el rol del usuario
-  const getFilteredEstablecimientos = () => {
-    let filtered = establecimientos
+  useEffect(() => {
+    fetchEstablecimientos()
+  }, [selectedComercio])
 
-    // Si es ADMIN, solo mostrar sus establecimientos
-    if (currentUser.rol === "ADMIN" && currentUser.comercio_id) {
-      filtered = filtered.filter((est) => est.comercio_id === currentUser.comercio_id)
+  const fetchEstablecimientos = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+
+      let url = `${API_URL}api/establecimientos`
+      if (selectedComercio) {
+        url += `?comercio_id=${selectedComercio}`
+      } else if (currentUser.rol === "ADMIN" && currentUser.comercio_id) {
+        url += `?comercio_id=${currentUser.comercio_id}`
+      }
+
+      const response = await axios.get(url, { headers })
+      setEstablecimientos(response.data)
+    } catch (error) {
+      console.error("Error fetching establecimientos:", error)
+    } finally {
+      setLoading(false)
     }
-
-    // Si hay un comercio seleccionado, filtrar por ese comercio
-    if (selectedComercio) {
-      filtered = filtered.filter((est) => est.comercio_id === selectedComercio)
-    }
-
-    // Aplicar filtro de búsqueda
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (est) =>
-          est.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          est.comercio_nombre.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    }
-
-    return filtered
   }
 
-  const filteredEstablecimientos = getFilteredEstablecimientos()
+  const filteredEstablecimientos = establecimientos.filter((establecimiento) => {
+    const matchesSearch =
+      establecimiento.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      establecimiento.comercio?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return matchesSearch
+  })
 
   const handleEdit = (establecimiento) => {
     setEditingEstablecimiento(establecimiento)
     setFormData({
       nombre: establecimiento.nombre,
+      comercio_id: establecimiento.comercio_id,
     })
     setIsDialogOpen(true)
   }
@@ -78,36 +82,41 @@ export function EstablecimientosSection({
     setEditingEstablecimiento(null)
     setFormData({
       nombre: "",
+      comercio_id: selectedComercio || currentUser.comercio_id || 0,
     })
     setIsDialogOpen(true)
   }
 
-  const handleSave = () => {
-    const comercio_id = selectedComercio || currentUser.comercio_id || 1
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
 
-    if (editingEstablecimiento) {
-      setEstablecimientos(
-        establecimientos.map((est) =>
-          est.id === editingEstablecimiento.id ? { ...est, nombre: formData.nombre } : est,
-        ),
-      )
-    } else {
-      const comercio = establecimientos.find((est) => est.comercio_id === comercio_id)
-      const newEstablecimiento = {
-        id: Math.max(...establecimientos.map((est) => est.id)) + 1,
-        nombre: formData.nombre,
-        comercio_id: comercio_id,
-        comercio_nombre: comercio?.comercio_nombre || "Comercio",
+      if (editingEstablecimiento) {
+        await axios.put(`${API_URL}api/establecimientos/${editingEstablecimiento.id}`, formData, { headers })
+      } else {
+        await axios.post(`${API_URL}api/establecimientos`, formData, { headers })
       }
-      setEstablecimientos([...establecimientos, newEstablecimiento])
+
+      fetchEstablecimientos()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving establecimiento:", error)
     }
-    setIsDialogOpen(false)
   }
 
-  const handleDelete = (id) => {
-    setEstablecimientos(establecimientos.filter((est) => est.id !== id))
-    if (selectedEstablecimiento === id) {
-      setSelectedEstablecimiento(null)
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const headers = { Authorization: `Bearer ${token}` }
+      await axios.delete(`${API_URL}api/establecimientos/${id}`, { headers })
+
+      if (selectedEstablecimiento === id) {
+        setSelectedEstablecimiento(null)
+      }
+      fetchEstablecimientos()
+    } catch (error) {
+      console.error("Error deleting establecimiento:", error)
     }
   }
 
@@ -119,6 +128,10 @@ export function EstablecimientosSection({
     return (
       currentUser.rol === "SUPERADMIN" || (currentUser.rol === "ADMIN" && (selectedComercio || currentUser.comercio_id))
     )
+  }
+
+  if (loading) {
+    return <div>Cargando establecimientos...</div>
   }
 
   return (
@@ -217,7 +230,7 @@ export function EstablecimientosSection({
                       {establecimiento.nombre}
                     </Button>
                   </TableCell>
-                  <TableCell>{establecimiento.comercio_nombre}</TableCell>
+                  <TableCell>{establecimiento.comercio?.nombre || "Sin comercio"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
