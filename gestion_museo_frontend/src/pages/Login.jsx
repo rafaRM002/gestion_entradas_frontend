@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import axios from "axios"
-import { API_URL } from "../config"
 import { useNavigate } from "react-router-dom"
+import { API_URL } from "../utilities/apirest"
+import axios from "axios"
 
 function Login() {
   const [username, setUsername] = useState("")
@@ -26,8 +26,8 @@ function Login() {
           localStorage.setItem("username", username) // Guardamos el username para futuras consultas
           setErrorMessage(null)
 
-          // Forzar recarga para obtener datos del usuario
-          window.location.href = "/"
+          // Redirigir según el rol después del login
+          navigate("/dashboard")
         }
       })
       .catch((error) => {
@@ -41,57 +41,58 @@ function Login() {
   }
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md p-10 bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="flex justify-center mb-6">
+          <img src="/logo.png" alt="Logo" className="w-24 h-auto mb-4" />
+        </div>
+
+        <h2 className="text-center text-2xl font-medium text-gray-800 mb-6">INICIAR SESIÓN</h2>
+
         {errorMessage && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong className="font-bold">Error:</strong>
-            <span className="block sm:inline">{errorMessage}</span>
-          </div>
+          <div className="text-sm text-center text-red-700 bg-red-50 rounded py-2 mb-4">{errorMessage}</div>
         )}
-        <form onSubmit={realizarSolicitud}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-              Usuario
-            </label>
+
+        <form onSubmit={realizarSolicitud} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="username"
               type="text"
-              placeholder="Usuario"
+              className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
+              placeholder="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Contraseña
-            </label>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-              id="password"
               type="password"
-              placeholder="Contraseña"
+              className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-800"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <button
-              className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-            </button>
-            <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-gray-900 text-white font-medium rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </button>
         </form>
+
+        <p className="text-center text-sm text-gray-600 mt-6">
+          ¿No tienes cuenta?{" "}
+          <span className="underline cursor-pointer hover:text-gray-800">
+            <a href="/registro">Regístrate</a>
+          </span>
+        </p>
       </div>
     </div>
   )
