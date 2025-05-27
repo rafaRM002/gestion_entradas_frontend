@@ -127,8 +127,9 @@ function AppContent() {
   const isAuthPage = location.pathname === "/" || location.pathname === "/registro"
   const isPreviewPage = location.pathname.startsWith("/preview/")
 
-  const shouldShowNavbar = (isClientView || isPreviewPage) && !isAuthPage
-  const shouldShowFooter = (isClientView || isPreviewPage) && !isAuthPage
+  // No mostrar navbar/footer en selección de establecimiento para clientes
+  const shouldShowNavbar = (isClientView || isPreviewPage) && !isAuthPage && !isEstablecimientoSelection
+  const shouldShowFooter = (isClientView || isPreviewPage) && !isAuthPage && !isEstablecimientoSelection
 
   // Datos mock para preview
   const mockEstablecimientoData = {
