@@ -45,11 +45,11 @@ export function EstablecimientosSection({
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
 
-      let url = `${API_URL}api/establecimientos`
+      let url = `${API_URL}api/establecimiento`
       if (selectedComercio) {
-        url += `?comercio_id=${selectedComercio}`
+        url += `/${selectedComercio}`
       } else if (currentUser.rol === "ADMIN" && currentUser.comercio_id) {
-        url += `?comercio_id=${currentUser.comercio_id}`
+        url += `/${currentUser.comercio_id}`
       }
 
       const response = await axios.get(url, { headers })
@@ -93,9 +93,9 @@ export function EstablecimientosSection({
       const headers = { Authorization: `Bearer ${token}` }
 
       if (editingEstablecimiento) {
-        await axios.put(`${API_URL}api/establecimientos/${editingEstablecimiento.id}`, formData, { headers })
+        await axios.put(`${API_URL}api/establecimiento/${editingEstablecimiento.id}`, formData, { headers })
       } else {
-        await axios.post(`${API_URL}api/establecimientos`, formData, { headers })
+        await axios.post(`${API_URL}api/establecimiento`, formData, { headers })
       }
 
       fetchEstablecimientos()
