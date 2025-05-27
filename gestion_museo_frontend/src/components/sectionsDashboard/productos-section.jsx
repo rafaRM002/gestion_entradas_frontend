@@ -44,7 +44,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
     try {
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
-      const response = await axios.get(`${API_URL}api/productos?establecimiento_id=${selectedEstablecimiento}`, {
+      const response = await axios.get(`${API_URL}api/producto/establecimiento/${selectedEstablecimiento}`, {
         headers,
       })
       setProductos(response.data)
@@ -93,9 +93,9 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
       const headers = { Authorization: `Bearer ${token}` }
 
       if (editingProducto) {
-        await axios.put(`${API_URL}api/productos/${editingProducto.id}`, formData, { headers })
+        await axios.put(`${API_URL}api/producto/${editingProducto.id}`, formData, { headers })
       } else {
-        await axios.post(`${API_URL}api/productos`, formData, { headers })
+        await axios.post(`${API_URL}api/producto`, formData, { headers })
       }
 
       fetchProductos()
@@ -109,7 +109,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
     try {
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
-      await axios.delete(`${API_URL}api/productos/${id}`, { headers })
+      await axios.delete(`${API_URL}api/producto/${id}`, { headers })
       fetchProductos()
     } catch (error) {
       console.error("Error deleting producto:", error)

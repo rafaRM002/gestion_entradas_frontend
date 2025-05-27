@@ -46,7 +46,7 @@ export function ComerciosSection({
     try {
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
-      const response = await axios.get(`${API_URL}api/comercios`, { headers })
+      const response = await axios.get(`${API_URL}api/comercio`, { headers })
       setComercios(response.data)
     } catch (error) {
       console.error("Error fetching comercios:", error)
@@ -59,7 +59,7 @@ export function ComerciosSection({
     try {
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
-      const response = await axios.get(`${API_URL}api/usuarios`, { headers })
+      const response = await axios.get(`${API_URL}api/usuario`, { headers })
       setUsuarios(response.data.filter((user) => user.rol === "ADMIN"))
     } catch (error) {
       console.error("Error fetching usuarios:", error)
@@ -96,9 +96,9 @@ export function ComerciosSection({
       const headers = { Authorization: `Bearer ${token}` }
 
       if (editingComercio) {
-        await axios.put(`${API_URL}api/comercios/${editingComercio.id}`, formData, { headers })
+        await axios.put(`${API_URL}api/comercio/${editingComercio.id}`, formData, { headers })
       } else {
-        await axios.post(`${API_URL}api/comercios`, formData, { headers })
+        await axios.post(`${API_URL}api/comercio`, formData, { headers })
       }
 
       fetchComercios()
@@ -112,7 +112,7 @@ export function ComerciosSection({
     try {
       const token = localStorage.getItem("authToken")
       const headers = { Authorization: `Bearer ${token}` }
-      await axios.delete(`${API_URL}api/comercios/${id}`, { headers })
+      await axios.delete(`${API_URL}api/comercio/${id}`, { headers })
 
       if (selectedComercio === id) {
         setSelectedComercio(null)

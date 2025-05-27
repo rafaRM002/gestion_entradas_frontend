@@ -31,7 +31,7 @@ export default function Establecimientos({ setSelectedEstablecimiento }) {
         const token = localStorage.getItem("authToken")
         const headers = { Authorization: `Bearer ${token}` }
 
-        const response = await axios.get(`${API_URL}api/establecimientos`, { headers })
+        const response = await axios.get(`${API_URL}api/establecimiento`, { headers })
 
         if (response.status === 200) {
           setEstablecimientos(response.data)
