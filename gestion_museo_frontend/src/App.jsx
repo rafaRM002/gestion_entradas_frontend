@@ -17,6 +17,8 @@ import Perfil from "./pages/Perfil"
 import Registro from "./pages/Register"
 import Establecimiento from "./pages/Establecimiento"
 import Dashboard from "./pages/DashBoard"
+import { API_URL } from "./utilities/apirest"
+import axios from "axios"
 
 function App() {
   return (
@@ -51,24 +53,42 @@ function AppContent() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("authToken")
-      if (token) {
+      const username = localStorage.getItem("username")
+
+      if (token && username) {
         try {
           const headers = { Authorization: `Bearer ${token}` }
-          // Simulamos la respuesta de la API
-          const mockUserInfo = {
-            id: 1,
-            username: "admin",
-            rol: "SUPERADMIN", // Cambia esto para probar: CLIENTE, ADMIN, SUPERADMIN
-            comercio_id: 1,
-            comercio: {
-              nombre: "Restaurante El Buen Sabor",
-            },
+          const url = `${API_URL}api/usuarios/username?username=${username}`
+
+          const response = await axios.get(url, { headers })
+
+          if (response.status === 200) {
+            const userData = response.data
+
+            // Mapear el rol del backend al formato del frontend
+            let mappedRole = userData.rol
+            if (userData.rol === "VENDEDOR") {
+              mappedRole = "CLIENTE"
+            }
+
+            const userInfoData = {
+              id: userData.id,
+              username: userData.username,
+              rol: mappedRole,
+              comercio_id: userData.comercio_id || null,
+              comercio: userData.comercio || null,
+            }
+
+            setUserInfo(userInfoData)
+            setUserRole(mappedRole)
           }
-          setUserInfo(mockUserInfo)
-          setUserRole(mockUserInfo.rol)
         } catch (error) {
           console.error("Error al obtener información del usuario:", error)
+          // Si hay error, limpiar tokens y redirigir al login
           localStorage.removeItem("authToken")
+          localStorage.removeItem("username")
+          setUserInfo(null)
+          setUserRole(null)
         }
       }
       setLoading(false)

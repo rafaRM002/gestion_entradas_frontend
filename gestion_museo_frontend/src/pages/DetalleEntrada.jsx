@@ -156,7 +156,7 @@ export default function DetalleEntrada({ cart, setCart }) {
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[60px] text-center">{cantidad}</div>
+                <div className="px-4 py-1 border-t border-b border-gray-300 min-w-[60px] text-center">{cantidad}</div>
                 <button
                   onClick={handleIncrementarCantidad}
                   className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"

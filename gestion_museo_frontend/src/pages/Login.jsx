@@ -9,22 +9,29 @@ function Login() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [errorMessage, setErrorMessage] = useState(null)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   function realizarSolicitud(event) {
     event.preventDefault()
+    setLoading(true)
     const url = API_URL + "login"
+
     axios
       .post(url, { username: username, password: password })
       .then((response) => {
         if (response.status == 200) {
           const token = response.data.token
           localStorage.setItem("authToken", token)
+          localStorage.setItem("username", username) // Guardamos el username para futuras consultas
           setErrorMessage(null)
-          navigate("/establecimiento")
+
+          // Redirigir según el rol después del login
+          navigate("/dashboard")
         }
       })
       .catch((error) => {
+        setLoading(false)
         if (error.response) {
           setErrorMessage("Credenciales incorrectas. Inténtalo de nuevo.")
         } else {
@@ -55,6 +62,7 @@ function Login() {
               placeholder="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
             />
           </div>
 
@@ -66,14 +74,16 @@ function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-2 bg-gray-900 text-white font-medium rounded-md hover:bg-gray-800 transition-colors"
+            disabled={loading}
+            className="w-full py-2 bg-gray-900 text-white font-medium rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Iniciar Sesión
+            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </button>
         </form>
 
