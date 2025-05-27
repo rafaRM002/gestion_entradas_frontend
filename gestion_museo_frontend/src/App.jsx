@@ -50,6 +50,20 @@ function AppContent() {
     }
   }, [cart])
 
+  // Cargar establecimiento desde localStorage al iniciar
+  useEffect(() => {
+    const storedEstablecimiento = localStorage.getItem("selectedEstablecimiento")
+    if (storedEstablecimiento) {
+      try {
+        const establecimiento = JSON.parse(storedEstablecimiento)
+        setSelectedEstablecimiento(establecimiento)
+      } catch (error) {
+        console.error("Error al cargar establecimiento desde localStorage:", error)
+        localStorage.removeItem("selectedEstablecimiento")
+      }
+    }
+  }, [])
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("authToken")
@@ -87,8 +101,10 @@ function AppContent() {
           // Si hay error, limpiar tokens y redirigir al login
           localStorage.removeItem("authToken")
           localStorage.removeItem("username")
+          localStorage.removeItem("selectedEstablecimiento")
           setUserInfo(null)
           setUserRole(null)
+          setSelectedEstablecimiento(null)
         }
       }
       setLoading(false)
@@ -106,10 +122,17 @@ function AppContent() {
       case "ADMIN":
         return "/dashboard"
       case "CLIENTE":
-        return "/establecimiento"
+        // Si ya tiene establecimiento seleccionado, ir a home, sino a selección
+        return selectedEstablecimiento ? "/home" : "/establecimiento"
       default:
         return "/"
     }
+  }
+
+  // Función para manejar la selección de establecimiento
+  const handleSetSelectedEstablecimiento = (establecimiento) => {
+    setSelectedEstablecimiento(establecimiento)
+    localStorage.setItem("selectedEstablecimiento", JSON.stringify(establecimiento))
   }
 
   if (loading) {
@@ -173,7 +196,7 @@ function AppContent() {
           path="/establecimiento"
           element={
             isAuthenticated && userRole === "CLIENTE" ? (
-              <Establecimiento setSelectedEstablecimiento={setSelectedEstablecimiento} />
+              <Establecimiento setSelectedEstablecimiento={handleSetSelectedEstablecimiento} />
             ) : (
               <Navigate to="/" replace />
             )

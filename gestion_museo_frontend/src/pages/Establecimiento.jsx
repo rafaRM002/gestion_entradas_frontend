@@ -75,8 +75,8 @@ export default function Establecimientos({ setSelectedEstablecimiento }) {
   }
 
   const handleSelectEstablecimiento = (establecimiento) => {
+    // Usar la función que maneja localStorage
     setSelectedEstablecimiento(establecimiento)
-    localStorage.setItem("establecimiento", JSON.stringify(establecimiento))
     navigate("/home")
   }
 
