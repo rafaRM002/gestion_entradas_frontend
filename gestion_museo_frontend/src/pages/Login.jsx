@@ -27,7 +27,7 @@ function Login() {
           setErrorMessage(null)
 
           // Forzar recarga para obtener datos del usuario
-          window.location.href = "/"
+          navigate("/")
         }
       })
       .catch((error) => {
