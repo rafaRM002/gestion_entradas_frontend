@@ -32,8 +32,8 @@ export function AppSidebar({
 
   const handleSectionChange = (section) => {
     setActiveSection(section)
-    // Solo limpiar establecimiento seleccionado, mantener comercio
-    setSelectedEstablecimiento(null)
+    // NO limpiar establecimiento seleccionado al cambiar de sección
+    // Solo mantener el comercio y establecimiento seleccionados
   }
 
   const menuItems = [
