@@ -38,7 +38,7 @@ export function EstablecimientosSection({
 
   useEffect(() => {
     fetchEstablecimientos()
-  }, [selectedComercio])
+  }, [selectedComercio, currentUser])
 
   const fetchEstablecimientos = async () => {
     try {
@@ -46,10 +46,14 @@ export function EstablecimientosSection({
       const headers = { Authorization: `Bearer ${token}` }
 
       let url = `${API_URL}api/establecimiento`
-      if (selectedComercio) {
-        url += `/obtenerbycomercio/${selectedComercio}`
-      } else if (currentUser.rol === "ADMIN" && currentUser.comercio_id) {
-        url += `/obtenerbycomercio/${currentUser.comercio_id}`
+
+      // Si es ADMIN, usar siempre su comercio_id
+      if (currentUser.rol === "ADMIN" && currentUser.comercio_id) {
+        url = `${API_URL}api/establecimiento/obtenerbycomercio/${currentUser.comercio_id}`
+      }
+      // Si es SUPERADMIN y hay comercio seleccionado
+      else if (selectedComercio) {
+        url = `${API_URL}api/establecimiento/obtenerbycomercio/${selectedComercio}`
       }
 
       const response = await axios.get(url, { headers })
@@ -113,6 +117,7 @@ export function EstablecimientosSection({
 
       if (selectedEstablecimiento === id) {
         setSelectedEstablecimiento(null)
+        localStorage.removeItem("dashboardSelectedEstablecimiento")
       }
       fetchEstablecimientos()
     } catch (error) {
@@ -122,11 +127,13 @@ export function EstablecimientosSection({
 
   const handleSelectEstablecimiento = (establecimiento) => {
     setSelectedEstablecimiento(establecimiento.id)
+    // Guardar en localStorage para persistencia
+    localStorage.setItem("dashboardSelectedEstablecimiento", establecimiento.id.toString())
   }
 
   const canCreateEstablecimiento = () => {
     return (
-      currentUser.rol === "SUPERADMIN" || (currentUser.rol === "ADMIN" && (selectedComercio || currentUser.comercio_id))
+      (currentUser.rol === "SUPERADMIN" && selectedComercio) || (currentUser.rol === "ADMIN" && currentUser.comercio_id)
     )
   }
 
@@ -141,7 +148,9 @@ export function EstablecimientosSection({
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Establecimientos</h1>
           <p className="text-muted-foreground">
             Administra los establecimientos
-            {selectedComercio && " del comercio seleccionado"}
+            {currentUser.rol === "ADMIN" && currentUser.comercio
+              ? ` de ${currentUser.comercio.nombre}`
+              : selectedComercio && " del comercio seleccionado"}
           </p>
         </div>
         {canCreateEstablecimiento() && (
@@ -152,7 +161,7 @@ export function EstablecimientosSection({
         )}
       </div>
 
-      {!canCreateEstablecimiento() && currentUser.rol === "ADMIN" && !currentUser.comercio_id && (
+      {!canCreateEstablecimiento() && currentUser.rol === "SUPERADMIN" && !selectedComercio && (
         <Alert>
           <AlertDescription>Selecciona un comercio para gestionar sus establecimientos.</AlertDescription>
         </Alert>
@@ -171,7 +180,13 @@ export function EstablecimientosSection({
           </CardHeader>
           <CardContent>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setSelectedEstablecimiento(null)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedEstablecimiento(null)
+                  localStorage.removeItem("dashboardSelectedEstablecimiento")
+                }}
+              >
                 Deseleccionar
               </Button>
               <Button
@@ -192,7 +207,9 @@ export function EstablecimientosSection({
           <CardTitle>Establecimientos</CardTitle>
           <CardDescription>
             Lista de establecimientos
-            {selectedComercio && " del comercio seleccionado"}
+            {currentUser.rol === "ADMIN" && currentUser.comercio
+              ? ` de ${currentUser.comercio.nombre}`
+              : selectedComercio && " del comercio seleccionado"}
           </CardDescription>
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />

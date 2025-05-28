@@ -93,6 +93,20 @@ function AppContent() {
               comercio: userData.comercio || null,
             }
 
+            // Si es ADMIN, obtener su comercio asignado
+            if (mappedRole === "ADMIN") {
+              try {
+                const comercioResponse = await axios.get(`${API_URL}api/comercio/usuario/${username}`, { headers })
+                if (comercioResponse.status === 200 && comercioResponse.data.length > 0) {
+                  const comercioData = comercioResponse.data[0]
+                  userInfoData.comercio_id = comercioData.id
+                  userInfoData.comercio = comercioData
+                }
+              } catch (comercioError) {
+                console.error("Error al obtener comercio del usuario admin:", comercioError)
+              }
+            }
+
             setUserInfo(userInfoData)
             setUserRole(mappedRole)
           }

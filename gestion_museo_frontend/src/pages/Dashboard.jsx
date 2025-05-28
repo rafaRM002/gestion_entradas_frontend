@@ -8,19 +8,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { API_URL } from "../utilities/apirest"
+import axios from "axios"
 
 export default function Dashboard({ userInfo }) {
   const [activeSection, setActiveSection] = useState("usuarios")
   const [selectedComercio, setSelectedComercio] = useState(null)
   const [selectedEstablecimiento, setSelectedEstablecimiento] = useState(null)
+  const [comercios, setComercios] = useState([])
   const navigate = useNavigate()
 
-  // Datos mock de comercios para SUPERADMIN
-  const comercios = [
-    { id: 1, nombre: "Restaurante El Buen Sabor" },
-    { id: 2, nombre: "Cafetería Central" },
-    { id: 3, nombre: "Tienda de Ropa Moderna" },
-  ]
+  // Cargar comercios para SUPERADMIN
+  useEffect(() => {
+    const fetchComercios = async () => {
+      if (userInfo?.rol === "SUPERADMIN") {
+        try {
+          const token = localStorage.getItem("authToken")
+          const headers = { Authorization: `Bearer ${token}` }
+          const response = await axios.get(`${API_URL}api/comercio`, { headers })
+          setComercios(response.data)
+        } catch (error) {
+          console.error("Error al obtener comercios:", error)
+        }
+      }
+    }
+
+    fetchComercios()
+  }, [userInfo])
 
   // Si es ADMIN, establecer automáticamente su comercio
   useEffect(() => {
@@ -29,25 +43,54 @@ export default function Dashboard({ userInfo }) {
     }
   }, [userInfo])
 
+  // Recuperar establecimiento seleccionado del localStorage
+  useEffect(() => {
+    const savedEstablecimiento = localStorage.getItem("dashboardSelectedEstablecimiento")
+    if (savedEstablecimiento) {
+      try {
+        setSelectedEstablecimiento(Number(savedEstablecimiento))
+      } catch (error) {
+        console.error("Error al cargar establecimiento guardado:", error)
+        localStorage.removeItem("dashboardSelectedEstablecimiento")
+      }
+    }
+  }, [])
+
   const handlePreviewEstablecimiento = (establecimientoId) => {
+    // Guardar el establecimiento seleccionado antes de navegar
+    localStorage.setItem("dashboardSelectedEstablecimiento", establecimientoId.toString())
     navigate(`/preview/${establecimientoId}`)
   }
 
   const handleComercioSelect = (comercioId) => {
     setSelectedComercio(Number(comercioId))
+    // Limpiar establecimiento seleccionado al cambiar de comercio
+    setSelectedEstablecimiento(null)
+    localStorage.removeItem("dashboardSelectedEstablecimiento")
     // Si estamos en la sección de comercios, cambiar a establecimientos
     if (activeSection === "comercios") {
       setActiveSection("establecimientos")
     }
   }
 
+  const handleSetSelectedEstablecimiento = (establecimientoId) => {
+    setSelectedEstablecimiento(establecimientoId)
+    // Guardar en localStorage para persistencia
+    localStorage.setItem("dashboardSelectedEstablecimiento", establecimientoId.toString())
+  }
+
   const getComercioNombre = (comercioId) => {
+    if (userInfo?.rol === "ADMIN" && userInfo?.comercio) {
+      return userInfo.comercio.nombre
+    }
     const comercio = comercios.find((c) => c.id === comercioId)
     return comercio?.nombre || "Selecciona un comercio"
   }
 
   const handleLogout = () => {
     localStorage.removeItem("authToken")
+    localStorage.removeItem("username")
+    localStorage.removeItem("dashboardSelectedEstablecimiento")
     navigate("/")
   }
 
@@ -81,6 +124,21 @@ export default function Dashboard({ userInfo }) {
         </div>
       )}
 
+      {/* Header para ADMIN mostrando su comercio */}
+      {userInfo?.rol === "ADMIN" && userInfo?.comercio && (
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-gray-600 ml-60" />
+                <span className="font-medium text-gray-900">Comercio:</span>
+                <span className="text-gray-700">{userInfo.comercio.nombre}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dashboard principal */}
       <SidebarProvider>
         <div className="flex w-full">
@@ -90,7 +148,7 @@ export default function Dashboard({ userInfo }) {
             setActiveSection={setActiveSection}
             selectedComercio={selectedComercio}
             setSelectedComercio={setSelectedComercio}
-            setSelectedEstablecimiento={setSelectedEstablecimiento}
+            setSelectedEstablecimiento={handleSetSelectedEstablecimiento}
             onPreviewEstablecimiento={handlePreviewEstablecimiento}
             comercios={comercios}
             onLogout={handleLogout}
@@ -129,7 +187,7 @@ export default function Dashboard({ userInfo }) {
                 selectedComercio={selectedComercio}
                 selectedEstablecimiento={selectedEstablecimiento}
                 setSelectedComercio={setSelectedComercio}
-                setSelectedEstablecimiento={setSelectedEstablecimiento}
+                setSelectedEstablecimiento={handleSetSelectedEstablecimiento}
                 onPreviewEstablecimiento={handlePreviewEstablecimiento}
                 comercios={comercios}
                 onComercioSelect={handleComercioSelect}

@@ -37,6 +37,9 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
   useEffect(() => {
     if (selectedEstablecimiento) {
       fetchProductos()
+    } else {
+      setProductos([])
+      setLoading(false)
     }
   }, [selectedEstablecimiento])
 
@@ -50,6 +53,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
       setProductos(response.data)
     } catch (error) {
       console.error("Error fetching productos:", error)
+      setProductos([])
     } finally {
       setLoading(false)
     }
@@ -70,7 +74,7 @@ export function ProductosSection({ currentUser, selectedEstablecimiento }) {
       descripcion: producto.descripcion,
       precio: producto.precio,
       stock: producto.stock,
-      establecimiento_id: producto.establecimiento_id,
+      establecimiento_id: producto.establecimiento_id || producto.establecimiento?.id,
     })
     setIsDialogOpen(true)
   }
